@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Catch My Love ❤️</title>
+
+<style>
+body {
+  margin:0;
+  font-family:'Comic Sans MS', cursive;
+  background: linear-gradient(135deg, #ffd1dc, #ffe4e1);
+  text-align:center;
+  overflow:hidden;
+}
+
+/* TITLE */
+h1 {
+  margin-top:15px;
+  font-size:22px;
+  color:#d63384;
+}
+
+#score {
+  font-size:18px;
+}
+
+/* GAME AREA */
+#gameArea {
+  position:relative;
+  width:100%;
+  height:75vh;
+  overflow:hidden;
+}
+
+/* HEART */
+.heart {
+  position:absolute;
+  font-size:40px; /* bigger for mobile */
+  cursor:pointer;
+  user-select:none;
+}
+
+/* POPUP */
+.popupMsg {
+  position:fixed;
+  top:20%;
+  left:50%;
+  transform:translateX(-50%);
+  background:white;
+  padding:15px 20px;
+  border-radius:15px;
+  font-size:16px;
+  z-index:999;
+  animation: fadePop 2.5s ease;
+}
+
+@keyframes fadePop {
+  0% {opacity:0; transform:translate(-50%,20px);}
+  20% {opacity:1;}
+  80% {opacity:1;}
+  100% {opacity:0; transform:translate(-50%,-20px);}
+}
+
+/* FINAL SCREEN */
+#finalBox {
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:rgba(255,192,203,0.95);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  flex-direction:column;
+  padding:20px;
+}
+
+/* FLIP CARD */
+.flipCard {
+  width:200px;
+  height:260px;
+  perspective:1000px;
+}
+
+.flipInner {
+  width:100%;
+  height:100%;
+  position:relative;
+  transform-style:preserve-3d;
+  transition: transform 0.8s;
+}
+
+.flipInner.flipped {
+  transform: rotateY(180deg);
+}
+
+.flipFront, .flipBack {
+  position:absolute;
+  width:100%;
+  height:100%;
+  backface-visibility:hidden;
+  background:white;
+  border-radius:15px;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  flex-direction:column;
+  padding:10px;
+}
+
+.flipBack {
+  transform: rotateY(180deg);
+}
+
+.flipBack img {
+  width:100%;
+  border-radius:10px;
+}
+
+/* TYPING TEXT */
+#typedText {
+  font-size:14px;
+  margin-top:10px;
+  white-space:pre-line;
+}
+</style>
+</head>
+
+<body>
+
+<h1>DAY 4 OF REMINDING YOU THAT YOU'LL OFFICIALLY BECOME OLD HUBBY ❤️</h1>
+<p id="score">Score: 0</p>
+
+<div id="gameArea"></div>
+
+<!-- MUSIC -->
+<audio id="bgMusic" src="music1.mp3" preload="auto" loop></audio>
+<audio id="typingSound" src="typing.mp3" preload="auto"></audio>
+
+<script>
+let score = 0;
+let misses = 0;
+let gameRunning = true;
+let targetScore = 30;
+
+let shown10 = false;
+let shown20 = false;
+
+/* 🎵 START MUSIC ON FIRST TOUCH */
+document.body.addEventListener("click", () => {
+  let music = document.getElementById("bgMusic");
+  if (music.paused) {
+    music.volume = 0;
+    music.play();
+
+    let fade = setInterval(() => {
+      if (music.volume < 1) music.volume += 0.05;
+      else clearInterval(fade);
+    }, 200);
+  }
+}, { once: true });
+
+/* START GAME */
+let spawn = setInterval(createHeart, 1200); // slower spawn
+
+function createHeart() {
+  if (!gameRunning) return;
+
+  let heart = document.createElement("div");
+  heart.className = "heart";
+  heart.innerHTML = "❤️";
+
+  heart.style.left = Math.random() * 85 + "%";
+  heart.style.top = "0px";
+
+  document.getElementById("gameArea").appendChild(heart);
+
+  let fall = setInterval(() => {
+    heart.style.top = heart.offsetTop + 3 + "px"; // slower fall
+
+    heart.onclick = () => {
+      score++;
+      document.getElementById("score").innerText = "Score: " + score;
+      heart.remove();
+      clearInterval(fall);
+
+      if (score >= 10 && !shown10) {
+        shown10 = true;
+        showPopup("💖 You're getting closer to my heart...");
+      }
+
+      if (score >= 20 && !shown20) {
+        shown20 = true;
+        showPopup("💕 Just a little more... I'm all yours");
+      }
+
+      if (score >= targetScore) {
+        finalReveal();
+      }
+    };
+
+    if (heart.offsetTop > window.innerHeight * 0.75) {
+      misses++;
+      heart.remove();
+      clearInterval(fall);
+    }
+
+    if (misses >= 5 && gameRunning) {
+      endGame();
+    }
+
+  }, 30);
+}
+
+/* POPUP */
+function showPopup(text) {
+  let popup = document.createElement("div");
+  popup.className = "popupMsg";
+  popup.innerText = text;
+  document.body.appendChild(popup);
+
+  setTimeout(() => popup.remove(), 2500);
+}
+
+/* FINAL */
+function finalReveal() {
+  gameRunning = false;
+  clearInterval(spawn);
+  document.getElementById("bgMusic").pause();
+
+  let finalBox = document.createElement("div");
+  finalBox.id = "finalBox";
+
+  finalBox.innerHTML = `
+    <h2>💌 You unlocked something special...</h2>
+    <div class="flipCard" onclick="flipCard()">
+      <div class="flipInner" id="flipInner">
+        <div class="flipFront">Tap to reveal ❤️</div>
+        <div class="flipBack">
+          <img src="us-final.jpg">
+          <p id="typedText"></p>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(finalBox);
+}
+
+/* FLIP */
+function flipCard() {
+  document.getElementById("flipInner").classList.add("flipped");
+
+  setTimeout(() => {
+    typeText(
+      "You caught every piece of my heart ❤️\nAnd somehow, I still fall for you every single day.",
+      "typedText",
+      40
+    );
+  }, 600);
+}
+
+/* TYPING EFFECT */
+function typeText(text, elementId, speed) {
+  let i = 0;
+  let el = document.getElementById(elementId);
+  let sound = document.getElementById("typingSound");
+
+  el.innerHTML = "";
+
+  function typing() {
+    if (i < text.length) {
+      el.innerHTML += text.charAt(i);
+
+      sound.currentTime = 0;
+      sound.volume = 0.2;
+      sound.play();
+
+      i++;
+      setTimeout(typing, speed);
+    }
+  }
+
+  typing();
+}
+
+/* FAIL */
+function endGame() {
+  gameRunning = false;
+  clearInterval(spawn);
+  document.getElementById("bgMusic").pause();
+
+  alert("💔 You missed too many hearts...\nBut you still have mine ❤️");
+}
+</script>
+
+</body>
+</html>
